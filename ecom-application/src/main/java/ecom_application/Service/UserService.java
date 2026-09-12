@@ -1,45 +1,41 @@
 package ecom_application.Service;
 
 import ecom_application.Model.User;
+import ecom_application.Repository.UserRepository;
+import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
-    private List<User> userList = new ArrayList<>();
-    private AtomicLong idCounter = new AtomicLong(1);
-
+    private final UserRepository userRepository;
+//    private List<User> userList = new ArrayList<>();
+//    private AtomicLong idCounter = new AtomicLong(1);
     public List<User> getAllUsers() {
-        return userList;
+        return userRepository.findAll();
     }
 
-    public List<User> createUser(User user) {
+    public void createUser(User user) {
         // Generate a backend-controlled unique id
-        user.setId(idCounter.getAndIncrement());
-        userList.add(user);
-        return userList;
+//        user.setId(idCounter.getAndIncrement());
+        userRepository.save(user);
     }
 
-    public User getUser(Long id) {
-        if (id == null) return null;
-        for (User user : userList) {
-            if (user.getId() == id.longValue()) {
-                return user;
-            }
-        }
-        return null;
+    public Optional<User> getUser(Long id) {
+        return userRepository.findById(id);
     }
 
     public boolean updateUser(Long id, User user) {
-      return userList.stream()
-              .filter(user1->user1.getId()==id.longValue())
-                .findFirst()
-              .map(existingUser -> {
+      return userRepository.findById(id).map(existingUser -> {
                     existingUser.setFirstName(user.getFirstName());
                     existingUser.setLastName(user.getLastName());
+                    userRepository.save(existingUser);
                   return true;
               })
               .orElse(false);
