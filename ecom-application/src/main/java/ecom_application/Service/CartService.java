@@ -10,9 +10,13 @@ import ecom_application.Repository.UserRepository;
 import ecom_application.dto.CartItemRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import javax.swing.text.html.Option;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
+import java.util.OptionalInt;
 
 @Service
 @RequiredArgsConstructor
@@ -56,33 +60,26 @@ public class CartService {
         return true;
     }
 
-    public Boolean removeFromCart(String userID, CartItemRequest request){
-        // Find product and user
-        Optional<Product> productOpt = productRepository.findById(request.getProductId());
-        if (productOpt.isEmpty()) return false;
-        Product product = productOpt.get();
 
-        Optional<User> userOpt = userRepository.findById(Long.valueOf(userID));
-        if (userOpt.isEmpty()) return false;
-        User user = userOpt.get();
+@Transactional
+  public boolean removeFromCart(String userId, Long productId){
+      Optional<Product> productOpt = productRepository.findById(productId);
+      Optional<User> userOpt = userRepository.findById(Long.valueOf(userId));
+      if(productOpt.isPresent() && userOpt.isPresent()){
+          cartItemRepository.deleteByUserAndProduct(userOpt.get(), productOpt.get());
+          return true;
+      }
+      return false;
+  }
 
-        // Find cart item by user and product
-        CartItem cartItem = cartItemRepository.findByUserAndProduct(user, product);
-        if (cartItem == null) return false;
+  public List<CartItem> getCartItems(String userId){
+        return userRepository.findById(Long.valueOf(userId))
+                .map(cartItemRepository::findByUser)
+                .orElse(List.of());
+  }
 
-        // Determine how many to remove; null or zero means remove entire item
-        Integer removeQty = request.getQuantity();
-        if (removeQty == null || removeQty <= 0 || removeQty >= cartItem.getQuantity()) {
-            // remove the cart item completely
-            cartItemRepository.delete(cartItem);
-        } else {
-            // reduce quantity and update price
-            cartItem.setQuantity(cartItem.getQuantity() - removeQty);
-            cartItem.setPrice(product.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity())));
-            cartItemRepository.save(cartItem);
-        }
-
-        return true;
-    }
-
+  public void clearCart(String userId){
+        userRepository.findById(Long.valueOf(userId))
+                .ifPresent(cartItemRepository::deleteByUser);
+  }
 }

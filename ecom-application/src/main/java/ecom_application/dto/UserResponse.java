@@ -1,9 +1,7 @@
 package ecom_application.dto;
 
-import ecom_application.Model.UserRole;
+import ecom_application.Enums.UserRole;
 import lombok.Data;
-
-import java.time.LocalDateTime;
 
 @Data
 public class UserResponse {

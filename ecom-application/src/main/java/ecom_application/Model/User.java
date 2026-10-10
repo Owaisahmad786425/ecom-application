@@ -1,5 +1,6 @@
 package ecom_application.Model;
 
+import ecom_application.Enums.UserRole;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,7 +22,7 @@ public class User {
     private String lastName;
     private String email;
     private String phone;
-    private UserRole role=UserRole.CUSTOMER;
+    private UserRole role;
 
 
     //linking address with user using address_id as foreign key in user_table
